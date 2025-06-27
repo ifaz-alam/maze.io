@@ -1,20 +1,14 @@
-import { Application, Assets, Sprite } from "pixi.js";
+import { Application, Assets, Renderer } from "pixi.js";
+import { renderMaze } from "./helpers/renderMaze";
 
 /**
  * We initialize the app outside the IIFE so that it can be referenced by other functions that are also located outside the IIFE.
  */
-const app = new Application();
-
-/**
- * Asynchronous Immediately Invoked Function Expression (IIFE).
- */
-(async () => {
-  await setup();
-  await preload();
-})();
+const app: Application<Renderer> = new Application();
 
 async function setup() {
-  await app.init({ background: "#1099bb", resizeTo: window });
+  const pixiContainer: HTMLElement = document.getElementById("pixi-container") as HTMLElement;
+  await app.init({ width: 640, height: 480, background: "#1099bb", resizeTo: pixiContainer });
   document.body.appendChild(app.canvas);
 }
 
@@ -38,3 +32,12 @@ async function preload() {
   ];
   await Assets.load(assets);
 }
+
+/**
+ * Asynchronous Immediately Invoked Function Expression (IIFE).
+ */
+(async () => {
+  await setup();
+  await preload();
+  renderMaze(app);
+})();
