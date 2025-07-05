@@ -1,4 +1,4 @@
-import { Application, Container, ContainerChild, Graphics, removeStructAndGroupDuplicates, Renderer } from "pixi.js";
+import { Application, Container, ContainerChild, Graphics, Renderer } from "pixi.js";
 import { shuffleArray } from "./arrayUtils";
 
 interface MazeCell {
@@ -15,6 +15,7 @@ interface dfsStackItem {
 
 const TILE_SIZE: number = 32;
 const PADDING: number = TILE_SIZE;
+const WALL_THICKNESS: number = 5;
 /**
  * Our approach for maze generation is as follows:
  *  - Fix the top left corner as the start
@@ -25,6 +26,7 @@ const PADDING: number = TILE_SIZE;
  */
 
 export const renderMaze = (app: Application<Renderer>) => {
+    // Without loss of generality, maze tiles will be indexed from 0 to mazeWidth - 1, since we are drawing from 0-indexed positions
     const appWidth = app.renderer.width;
     const appHeight = app.renderer.height;
 
@@ -36,21 +38,48 @@ export const renderMaze = (app: Application<Renderer>) => {
 
     const mazeContainer: Container<ContainerChild> = new Container();
     app.stage.addChild(mazeContainer);
-    const maze: MazeCell[][] = getMaze(mazeHeight, mazeWidth);
 
-    // Let us process the maze container with the Graphics API
-    // Without loss of generality, maze tiles will be indexed from 0 to mazeWidth - 1, since we are drawing from 0-indexed positions
-
+    // Draw walls visually
     for (let y = 0; y < mazeHeight; y++) {
         for (let x = 0; x < mazeWidth; x++) {
             const block: Graphics = new Graphics()
                 .rect(x * TILE_SIZE + PADDING, y * TILE_SIZE + PADDING, TILE_SIZE, TILE_SIZE)
                 .fill(0xffffff)
-                .stroke({ width: 4, color: 0x36454f });
+                .stroke({ width: WALL_THICKNESS, color: 0x36454f });
             app.stage.addChild(block);
         }
     }
-    console.log(app.renderer.height);
+
+    const maze: MazeCell[][] = getMaze(mazeHeight, mazeWidth);
+
+    // Remove walls visually
+    for (let row = 0; row < mazeHeight; row++) {
+        for (let col = 0; col < mazeWidth; col++) {
+            // For this approach, we simply overlap a white square in between the middle of the coordinates (by taking the mean of the coordinates).
+            // This is more convenient than having a thinner rectangle for which we need to modify the orientation depending on the direction of the neighbour.
+            for (const neighbour of maze[row][col].neighbours) {
+                const neighbourRow: number = neighbour[0];
+                const neighbourCol: number = neighbour[1];
+                const rowToDrawFrom: number = (row + neighbourRow) / 2;
+                const colToDrawFrom: number = (col + neighbourCol) / 2;
+
+                // The white square would be centered between two squares which may have some black borders, but how do we make sure we don't draw too much white and make the black thickness look inconsistent?
+                // We can strategically shrink our white square, so that it removes a black wall regardless of the direction of the neighbour without relying on conditional cases.
+                // Simply start the drawing process with a WALL_THICKNESS / 2 offset, and end the drawing process earlier by subtracting off the WALL_THICKNESS from TILE_SIZE.
+                // Basically we make the white square fit inside the original square without deleting any black at all, then shift it via weighted average of the coordinates so that it does delete black.
+                const whiteSquare: Graphics = new Graphics()
+                    .rect(
+                        colToDrawFrom * TILE_SIZE + PADDING + WALL_THICKNESS / 2,
+                        rowToDrawFrom * TILE_SIZE + PADDING + WALL_THICKNESS / 2,
+                        TILE_SIZE - WALL_THICKNESS,
+                        TILE_SIZE - WALL_THICKNESS
+                    )
+                    .fill(0xffffff);
+
+                app.stage.addChild(whiteSquare);
+            }
+        }
+    }
 };
 
 /**
@@ -61,14 +90,11 @@ export const renderMaze = (app: Application<Renderer>) => {
  */
 const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
     const generateMazeWithDepthFirstSearch = (rootRow: number, rootCol: number) => {
-        const visited: Boolean[][] = Array(num_rows)
+        const visited: boolean[][] = Array(num_rows)
             .fill(0)
             .map(() => Array(num_cols).fill(false));
-
         // Randomized DFS will fill the metadata in this variable
-        const maze: MazeCell[][] = Array(num_rows)
-            .fill(0)
-            .map(() => Array(num_cols).fill({ neighbours: [] }));
+        const maze: MazeCell[][] = Array.from({ length: num_rows }, () => Array.from({ length: num_cols }, () => ({ neighbours: [] })));
 
         const stack: dfsStackItem[] = [{ row: rootRow, col: rootCol, isRoot: true }];
 
@@ -82,54 +108,56 @@ const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
         while (stack.length > 0) {
             const currCell: dfsStackItem = stack.pop() as dfsStackItem;
             const currRow: number = currCell.row;
-            const currCol: number = currCell.row;
-            const isRoot: boolean = currCell.isRoot;
+            const currCol: number = currCell.col;
 
-            // The root will need to get its metadata updated eventually.
-            // To avoid losing information when simulating the call stack, we make each neighbour that gets pushed in the stack know who enqueued it (Check randomized neighbour process logic below).
-            // That way, the neighbour list of the respective nodes are maintained and updated when necessary.
-            if (!isRoot) {
-                const rowQueuedFrom: number = currCell.rowQueuedFrom as number;
-                const colQueuedFrom: number = currCell.colQueuedFrom as number;
-
-                // Update data bidirectionally
-                maze[rowQueuedFrom][colQueuedFrom].neighbours.push([currRow, currCol]);
-                maze[currRow][currCol].neighbours.push([rowQueuedFrom, colQueuedFrom]);
-            }
-
-            // We only push in neighbours within bounds so really we just need to check visited only.
-            const performBacktrack: Boolean = visited[currRow][currCol] == true;
+            // We only push in neighbours within bounds, so really we just need to check visited only.
+            const performBacktrack: boolean = visited[currRow][currCol] == true;
             if (performBacktrack) {
                 continue;
             }
 
             visited[currRow][currCol] = true;
 
-            // Determine where we can go
+            // The root will need to get its metadata updated eventually.
+            // To avoid losing information when simulating the call stack, we make each neighbour that gets pushed in the stack know who exactly pushed it (Refer to randomized neighbour process logic below).
+            // This way, the neighbour list of the respective nodes are maintained and updated when necessary.
+            const isRoot: boolean = currCell.isRoot;
+
+            if (!isRoot) {
+                // Update data bidirectionally
+                const rowQueuedFrom: number = currCell?.rowQueuedFrom as number;
+                const colQueuedFrom: number = currCell?.colQueuedFrom as number;
+                maze[currRow][currCol].neighbours.push([rowQueuedFrom, colQueuedFrom]);
+                maze[rowQueuedFrom][colQueuedFrom].neighbours.push([currRow, currCol]);
+            }
+
+            // Determine where we can go given the current state of the algorithm.
             const validNeighbours: [number, number][] = deltas
                 .map(([dx, dy]) => [currRow + dx, currCol + dy] as [number, number])
                 .filter(([new_row, new_col]) => {
-                    const isWithinBounds: Boolean = 0 <= new_row && new_row < num_rows && 0 <= new_col && new_col < num_cols;
+                    const isWithinBounds: boolean = 0 <= new_row && new_row < num_rows && 0 <= new_col && new_col < num_cols;
                     return isWithinBounds && visited[new_row][new_col] == false;
                 });
 
-            // Randomize order of neighbours
+            if (validNeighbours.length == 0) {
+                continue;
+            }
+
             const randomizedNeighbours = shuffleArray(validNeighbours);
 
             for (const neighbour of randomizedNeighbours) {
                 const neighbourRow: number = neighbour[0];
                 const neighbourCol: number = neighbour[1];
-
-                if (!visited[neighbourRow][neighbourCol]) {
-                    stack.push({ row: neighbourRow, col: neighbourCol, isRoot: false, rowQueuedFrom: currRow, colQueuedFrom: currCol });
-                }
+                stack.push({ row: neighbourRow, col: neighbourCol, isRoot: false, rowQueuedFrom: currRow, colQueuedFrom: currCol });
             }
         }
 
         return maze;
     };
 
-    // TODO: Start generation process from a random cell within bounds to possibly introduce more variation.
-    const maze: MazeCell[][] = generateMazeWithDepthFirstSearch(0, 0);
+    // Start generation process from a random cell within bounds to introduce more variation.
+    const randomRowToBeginGenerationFrom: number = Math.floor(Math.random() * num_rows);
+    const randomColToBeginGenerationFrom: number = Math.floor(Math.random() * num_cols);
+    const maze: MazeCell[][] = generateMazeWithDepthFirstSearch(randomRowToBeginGenerationFrom, randomColToBeginGenerationFrom);
     return maze;
 };
