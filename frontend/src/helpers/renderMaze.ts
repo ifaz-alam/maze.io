@@ -5,12 +5,17 @@ interface MazeCell {
     neighbours: number[][];
 }
 
-interface dfsStackItem {
+interface DfsStackItem {
     row: number;
     col: number;
     isRoot: boolean;
     rowQueuedFrom?: number;
     colQueuedFrom?: number;
+}
+interface GeneratedMaze {
+    maze: MazeCell[][];
+    startCoordinates: number[];
+    endCoordinates: number[];
 }
 
 const TILE_SIZE: number = 32;
@@ -88,7 +93,7 @@ export const renderMaze = (app: Application<Renderer>) => {
  * @param num_cols - The number of columns the maze should have
  * @returns A matrix where each cell maintains its own list of valid neighbours
  */
-const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
+const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
     const generateMazeWithDepthFirstSearch = (rootRow: number, rootCol: number) => {
         const visited: boolean[][] = Array(num_rows)
             .fill(0)
@@ -96,7 +101,7 @@ const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
         // Randomized DFS will fill the metadata in this variable
         const maze: MazeCell[][] = Array.from({ length: num_rows }, () => Array.from({ length: num_cols }, () => ({ neighbours: [] })));
 
-        const stack: dfsStackItem[] = [{ row: rootRow, col: rootCol, isRoot: true }];
+        const stack: DfsStackItem[] = [{ row: rootRow, col: rootCol, isRoot: true }];
 
         const deltas: [number, number][] = [
             [0, -1],
@@ -106,7 +111,7 @@ const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
         ];
 
         while (stack.length > 0) {
-            const currCell: dfsStackItem = stack.pop() as dfsStackItem;
+            const currCell: DfsStackItem = stack.pop() as DfsStackItem;
             const currRow: number = currCell.row;
             const currCol: number = currCell.col;
 
@@ -152,12 +157,81 @@ const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
             }
         }
 
-        return maze;
+        return { maze, ...getStartAndEndCoordinates(maze) };
     };
 
     // Start generation process from a random cell within bounds to introduce more variation.
     const randomRowToBeginGenerationFrom: number = Math.floor(Math.random() * num_rows);
     const randomColToBeginGenerationFrom: number = Math.floor(Math.random() * num_cols);
-    const maze: MazeCell[][] = generateMazeWithDepthFirstSearch(randomRowToBeginGenerationFrom, randomColToBeginGenerationFrom);
-    return maze;
+    const generatedMaze: GeneratedMaze = generateMazeWithDepthFirstSearch(randomRowToBeginGenerationFrom, randomColToBeginGenerationFrom);
+
+    return generatedMaze;
+};
+
+/**
+ * The generated Maze forms a spanning tree, so we can find the two globally furthest points efficiently using two Breadth-First Search (BFS) calls.
+ *
+ * 1. Select an arbitrary cell.
+ * 2. Find the furthest cell from this cell (call it X).
+ * 3. Start a separate breadth first call using the cell in step 2 and find the cell farthest from it (call it Y).
+ * 4. Globally furthest points are X and Y.
+ * @returns An array of length 2. Contains the row and column value of the furthest point in the maze from the specified `startRow` and `startCol`.
+ */
+const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinates: number[]; endCoordinates: number[] } => {
+    const num_rows: number = maze.length;
+    const num_cols: number = maze[0].length;
+    const randomStartRow = Math.random() * num_rows;
+    const randomStartCol = Math.random() * num_cols;
+
+    const startCoordinates: number[] = furthestCoordinatesFromPosition(maze, randomStartRow, randomStartCol);
+    const endCoordinates: number[] = furthestCoordinatesFromPosition(maze, startCoordinates[0], startCoordinates[1]);
+
+    return { startCoordinates, endCoordinates };
+};
+
+const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, startCol: number): number[] => {
+    const num_rows: number = maze.length;
+    const num_cols: number = maze[0].length;
+    const deltas: [number, number][] = [
+        [0, -1],
+        [0, 1],
+        [-1, 0],
+        [1, 0],
+    ];
+
+    const visited: boolean[][] = Array(num_rows)
+        .fill(0)
+        .map(() => Array(num_cols).fill(false));
+
+    const queue: number[][] = [[startRow, startCol]];
+
+    // We enqueue vertices of increasing distances, hence updating this value is easy.
+    let furthestCoordinates: number[] | undefined = undefined;
+
+    while (queue.length > 0) {
+        furthestCoordinates = queue[0];
+
+        for (let _ = 0; _ < queue.length; _++) {
+            const currCell: number[] = queue.shift() as number[];
+            const currRow: number = currCell[0];
+            const currCol: number = currCell[1];
+
+            const validNeighbours: [number, number][] = deltas
+                .map(([dx, dy]) => [currRow + dx, currCol + dy] as [number, number])
+                .filter(([new_row, new_col]) => {
+                    const isWithinBounds: boolean = 0 <= new_row && new_row < num_rows && 0 <= new_col && new_col < num_cols;
+                    return isWithinBounds && visited[new_row][new_col] == false;
+                });
+
+            // Update visited
+            for (const neighbour of validNeighbours) {
+                const neighbourRow: number = neighbour[0];
+                const neighbourCol: number = neighbour[1];
+                visited[neighbourRow][neighbourCol] = true;
+                queue.push(neighbour);
+            }
+        }
+    }
+
+    return furthestCoordinates as number[];
 };
