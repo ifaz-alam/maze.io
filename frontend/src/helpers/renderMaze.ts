@@ -13,8 +13,8 @@ interface dfsStackItem {
     colQueuedFrom?: number;
 }
 
-const TILE_SIZE: number = 20;
-const PADDING: number = 10;
+const TILE_SIZE: number = 32;
+const PADDING: number = TILE_SIZE;
 /**
  * Our approach for maze generation is as follows:
  *  - Fix the top left corner as the start
@@ -28,8 +28,9 @@ export const renderMaze = (app: Application<Renderer>) => {
     const appWidth = app.renderer.width;
     const appHeight = app.renderer.height;
 
-    const mazeWidth = appWidth / TILE_SIZE;
-    const mazeHeight = appHeight / TILE_SIZE;
+    // Thought process behind this is that we want to centre the grid such that the margin size is the same as the tile size.
+    const mazeWidth = Math.floor((appWidth - PADDING * 2) / TILE_SIZE);
+    const mazeHeight = Math.floor((appHeight - PADDING * 2) / TILE_SIZE);
 
     // When splitting the maze into chunks, the coordinates we want to start rendering blocks from would be the top left corner of a given cell.
 
@@ -39,8 +40,16 @@ export const renderMaze = (app: Application<Renderer>) => {
 
     // Let us process the maze container with the Graphics API
     // Without loss of generality, maze tiles will be indexed from 0 to mazeWidth - 1, since we are drawing from 0-indexed positions
-    const block: Graphics = new Graphics().rect((mazeWidth - 1) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE).fill(0xffffff);
-    app.stage.addChild(block);
+
+    for (let y = 0; y < mazeHeight; y++) {
+        for (let x = 0; x < mazeWidth; x++) {
+            const block: Graphics = new Graphics()
+                .rect(x * TILE_SIZE + PADDING, y * TILE_SIZE + PADDING, TILE_SIZE, TILE_SIZE)
+                .fill(0xffffff)
+                .stroke({ width: 4, color: 0x36454f });
+            app.stage.addChild(block);
+        }
+    }
     console.log(app.renderer.height);
 };
 
@@ -93,6 +102,8 @@ const getMaze = (num_rows: number, num_cols: number): MazeCell[][] => {
             if (performBacktrack) {
                 continue;
             }
+
+            visited[currRow][currCol] = true;
 
             // Determine where we can go
             const validNeighbours: [number, number][] = deltas
