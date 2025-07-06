@@ -7,9 +7,9 @@ import { renderMaze } from "./helpers/renderMaze";
 const app: Application<Renderer> = new Application();
 
 async function setup() {
-  const pixiContainer: HTMLElement = document.getElementById("pixi-container") as HTMLElement;
-  await app.init({ width: 640, height: 480, background: "#1099bb", resizeTo: pixiContainer });
-  document.body.appendChild(app.canvas);
+    const pixiContainer: HTMLElement = document.getElementById("pixi-container") as HTMLElement;
+    await app.init({ width: 640, height: 480, background: "#1099bb", resizeTo: pixiContainer });
+    document.body.appendChild(app.canvas);
 }
 
 /**
@@ -20,24 +20,24 @@ async function setup() {
  * - A known shortcut is to just simply call Sprite.from(<alias_name>), which takes 1 less step compared to the method above.
  */
 async function preload() {
-  const assets = [
-    { alias: "background", src: "https://pixijs.com/assets/tutorials/fish-pond/pond_background.jpg" },
-    { alias: "fish1", src: "https://pixijs.com/assets/tutorials/fish-pond/fish1.png" },
-    { alias: "fish2", src: "https://pixijs.com/assets/tutorials/fish-pond/fish2.png" },
-    { alias: "fish3", src: "https://pixijs.com/assets/tutorials/fish-pond/fish3.png" },
-    { alias: "fish4", src: "https://pixijs.com/assets/tutorials/fish-pond/fish4.png" },
-    { alias: "fish5", src: "https://pixijs.com/assets/tutorials/fish-pond/fish5.png" },
-    { alias: "overlay", src: "https://pixijs.com/assets/tutorials/fish-pond/wave_overlay.png" },
-    { alias: "displacement", src: "https://pixijs.com/assets/tutorials/fish-pond/displacement_map.png" },
-  ];
-  await Assets.load(assets);
+    const assets = [
+        { alias: "background", src: "https://pixijs.com/assets/tutorials/fish-pond/pond_background.jpg" },
+        { alias: "fish1", src: "https://pixijs.com/assets/tutorials/fish-pond/fish1.png" },
+        { alias: "fish2", src: "https://pixijs.com/assets/tutorials/fish-pond/fish2.png" },
+        { alias: "fish3", src: "https://pixijs.com/assets/tutorials/fish-pond/fish3.png" },
+        { alias: "fish4", src: "https://pixijs.com/assets/tutorials/fish-pond/fish4.png" },
+        { alias: "fish5", src: "https://pixijs.com/assets/tutorials/fish-pond/fish5.png" },
+        { alias: "overlay", src: "https://pixijs.com/assets/tutorials/fish-pond/wave_overlay.png" },
+        { alias: "displacement", src: "https://pixijs.com/assets/tutorials/fish-pond/displacement_map.png" },
+    ];
+    await Assets.load(assets);
 }
 
 /**
  * Asynchronous Immediately Invoked Function Expression (IIFE).
  */
 (async () => {
-  await setup();
-  await preload();
-  renderMaze(app);
+    await setup();
+    await preload();
+    renderMaze(app);
 })();

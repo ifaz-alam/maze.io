@@ -55,7 +55,10 @@ export const renderMaze = (app: Application<Renderer>) => {
         }
     }
 
-    const maze: MazeCell[][] = getMaze(mazeHeight, mazeWidth);
+    const { maze, startCoordinates, endCoordinates }: { maze: MazeCell[][]; startCoordinates: number[]; endCoordinates: number[] } = getMaze(
+        mazeHeight,
+        mazeWidth
+    );
 
     // Remove walls visually
     for (let row = 0; row < mazeHeight; row++) {
@@ -85,6 +88,33 @@ export const renderMaze = (app: Application<Renderer>) => {
             }
         }
     }
+
+    // Draw start and end coordinates. Parameter setting is inspired by already implemented logic above.
+    // Prematurely shrink square to a smaller side length, then shift it half the distance horizontally and vertically to center it.
+    const CENTER_OFFSET: number = TILE_SIZE / 2;
+    console.warn(startCoordinates, endCoordinates);
+
+    const startBlock: Graphics = new Graphics()
+        .rect(
+            startCoordinates[1] * TILE_SIZE + PADDING + WALL_THICKNESS / 2 + CENTER_OFFSET / 2,
+            startCoordinates[0] * TILE_SIZE + PADDING + WALL_THICKNESS / 2 + CENTER_OFFSET / 2,
+            TILE_SIZE - WALL_THICKNESS - CENTER_OFFSET,
+            TILE_SIZE - WALL_THICKNESS - CENTER_OFFSET
+        )
+        .fill(0x008000);
+    app.stage.addChild(startBlock);
+
+    const endBlock: Graphics = new Graphics()
+        .rect(
+            endCoordinates[1] * TILE_SIZE + PADDING + WALL_THICKNESS / 2 + CENTER_OFFSET / 2,
+            endCoordinates[0] * TILE_SIZE + PADDING + WALL_THICKNESS / 2 + CENTER_OFFSET / 2,
+            TILE_SIZE - WALL_THICKNESS - CENTER_OFFSET,
+            TILE_SIZE - WALL_THICKNESS - CENTER_OFFSET
+        )
+        .fill(0xff0000);
+    app.stage.addChild(endBlock);
+
+    console.log(maze);
 };
 
 /**
@@ -180,8 +210,8 @@ const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
 const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinates: number[]; endCoordinates: number[] } => {
     const num_rows: number = maze.length;
     const num_cols: number = maze[0].length;
-    const randomStartRow = Math.random() * num_rows;
-    const randomStartCol = Math.random() * num_cols;
+    const randomStartRow = Math.floor(Math.random() * num_rows);
+    const randomStartCol = Math.floor(Math.random() * num_cols);
 
     const startCoordinates: number[] = furthestCoordinatesFromPosition(maze, randomStartRow, randomStartCol);
     const endCoordinates: number[] = furthestCoordinatesFromPosition(maze, startCoordinates[0], startCoordinates[1]);
@@ -222,6 +252,10 @@ const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, s
                     const isWithinBounds: boolean = 0 <= new_row && new_row < num_rows && 0 <= new_col && new_col < num_cols;
                     return isWithinBounds && visited[new_row][new_col] == false;
                 });
+
+            if (validNeighbours.length == 0) {
+                break;
+            }
 
             // Update visited
             for (const neighbour of validNeighbours) {
