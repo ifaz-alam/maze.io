@@ -1,7 +1,7 @@
 import { Application, Container, ContainerChild, Graphics, Renderer } from "pixi.js";
 import { shuffleArray } from "./arrayUtils";
 
-interface MazeCell {
+export interface MazeCell {
     neighbours: number[][];
 }
 
@@ -12,7 +12,7 @@ interface DfsStackItem {
     rowQueuedFrom?: number;
     colQueuedFrom?: number;
 }
-interface GeneratedMaze {
+export interface GeneratedMaze {
     maze: MazeCell[][];
     startCoordinates: number[];
     endCoordinates: number[];
@@ -123,7 +123,7 @@ export const renderMaze = (app: Application<Renderer>) => {
  * @param num_cols - The number of columns the maze should have
  * @returns A matrix where each cell maintains its own list of valid neighbours
  */
-const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
+export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
     const generateMazeWithDepthFirstSearch = (rootRow: number, rootCol: number) => {
         const visited: boolean[][] = Array(num_rows)
             .fill(0)
@@ -222,12 +222,6 @@ const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinates: numb
 const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, startCol: number): number[] => {
     const num_rows: number = maze.length;
     const num_cols: number = maze[0].length;
-    const deltas: [number, number][] = [
-        [0, -1],
-        [0, 1],
-        [-1, 0],
-        [1, 0],
-    ];
 
     const visited: boolean[][] = Array(num_rows)
         .fill(0)
@@ -246,19 +240,8 @@ const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, s
             const currRow: number = currCell[0];
             const currCol: number = currCell[1];
 
-            const validNeighbours: [number, number][] = deltas
-                .map(([dx, dy]) => [currRow + dx, currCol + dy] as [number, number])
-                .filter(([new_row, new_col]) => {
-                    const isWithinBounds: boolean = 0 <= new_row && new_row < num_rows && 0 <= new_col && new_col < num_cols;
-                    return isWithinBounds && visited[new_row][new_col] == false;
-                });
-
-            if (validNeighbours.length == 0) {
-                break;
-            }
-
             // Update visited
-            for (const neighbour of validNeighbours) {
+            for (const neighbour of maze[currRow][currCol].neighbours) {
                 const neighbourRow: number = neighbour[0];
                 const neighbourCol: number = neighbour[1];
                 visited[neighbourRow][neighbourCol] = true;

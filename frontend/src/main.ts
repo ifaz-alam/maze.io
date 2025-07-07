@@ -1,5 +1,5 @@
 import { Application, Assets, Renderer } from "pixi.js";
-import { renderMaze } from "./helpers/renderMaze";
+import { renderMaze } from "./helpers/maze";
 
 /**
  * We initialize the app outside the IIFE so that it can be referenced by other functions that are also located outside the IIFE.
