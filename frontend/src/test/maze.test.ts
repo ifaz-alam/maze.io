@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
-import { GeneratedMaze, getMaze, MazeCell } from "../helpers/maze";
-import { areCoordinatesEqual } from "../helpers/arrayUtils";
+import { GeneratedMaze, getMaze, getStartAndEndCoordinates, MazeCell } from "../helpers/maze";
+import { areCoordinatesEqual } from "../helpers/maze";
 
-describe("Simple Maze Generation", () => {
+describe("Simple Generated Maze", () => {
     const numRows: number = 1;
     const numCols: number = 5;
 
@@ -18,11 +18,10 @@ describe("Simple Maze Generation", () => {
         endCoordinates = generatedMaze.endCoordinates;
     });
     it("should have the correct type", () => {
-        const { maze } = getMaze(numRows, numCols);
         expectTypeOf(maze).toEqualTypeOf<MazeCell[][]>();
     });
 
-    it(`should have the correct dimensions`, () => {
+    it("should have the correct dimensions", () => {
         expect(Array.isArray(maze)).toBe(true);
         expect(maze.length).toBe(numRows);
 
@@ -31,7 +30,6 @@ describe("Simple Maze Generation", () => {
             expect(row.length).toBe(numCols);
         }
     });
-
     it("should return valid start and end coordinates", () => {
         const coordinates: number[][] = [startCoordinates, endCoordinates];
 
@@ -109,5 +107,35 @@ describe("Simple Maze Generation", () => {
         }
 
         expect(numConnectedComponents).toBe(1);
+    });
+});
+describe("Maze Generation Helper Functions", () => {
+    describe("getStartAndEndCoordinates", () => {
+        it("should return endpoints at the top-left and top-right corners of a U-shaped maze because they are the furthest from each other", () => {
+            // Maze layout (U shape):
+            // [0,0] S       E [0,1]
+            //    │           │
+            // [1,0] ─────── [1,1]
+
+            const topLeft: number[] = [0, 0];
+            const topRight: number[] = [0, 1];
+            const bottomLeft: number[] = [1, 0];
+            const bottomRight: number[] = [1, 1];
+
+            const maze: MazeCell[][] = [
+                [{ neighbours: [bottomLeft] }, { neighbours: [bottomRight] }],
+                [{ neighbours: [topLeft, bottomRight] }, { neighbours: [topRight, bottomLeft] }],
+            ];
+
+            const { startCoordinates, endCoordinates } = getStartAndEndCoordinates(maze);
+
+            const startsAtTopLeft: boolean = areCoordinatesEqual(startCoordinates, topLeft);
+            const endsAtTopRight: boolean = areCoordinatesEqual(endCoordinates, topRight);
+
+            const startsAtTopRight: boolean = areCoordinatesEqual(startCoordinates, topRight);
+            const endsAtTopLeft: boolean = areCoordinatesEqual(endCoordinates, topLeft);
+
+            expect((startsAtTopLeft && endsAtTopRight) || (startsAtTopRight && endsAtTopLeft)).toBe(true);
+        });
     });
 });
