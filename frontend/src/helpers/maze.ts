@@ -4,7 +4,6 @@ import { shuffleArray } from "../utils/array";
 export interface MazeCell {
     neighbours: number[][];
 }
-
 interface DfsStackItem {
     row: number;
     col: number;
@@ -34,7 +33,6 @@ export const renderMaze = (app: Application<Renderer>) => {
     // Without loss of generality, maze tiles will be indexed from 0 to mazeWidth - 1, since we are drawing from 0-indexed positions
     const appWidth = app.renderer.width;
     const appHeight = app.renderer.height;
-
     // Thought process behind this is that we want to centre the grid such that the margin size is the same as the tile size.
     const mazeWidth = Math.floor((appWidth - PADDING * 2) / TILE_SIZE);
     const mazeHeight = Math.floor((appHeight - PADDING * 2) / TILE_SIZE);
@@ -92,7 +90,6 @@ export const renderMaze = (app: Application<Renderer>) => {
     // Draw start and end coordinates. Parameter setting is inspired by already implemented logic above.
     // Prematurely shrink square to a smaller side length, then shift it half the distance horizontally and vertically to center it.
     const CENTER_OFFSET: number = TILE_SIZE / 2;
-    console.warn(startCoordinates, endCoordinates);
 
     const startBlock: Graphics = new Graphics()
         .rect(
@@ -113,8 +110,6 @@ export const renderMaze = (app: Application<Renderer>) => {
         )
         .fill(0xff0000);
     app.stage.addChild(endBlock);
-
-    console.log(maze);
 };
 
 /**
@@ -139,7 +134,6 @@ export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
             [-1, 0],
             [1, 0],
         ];
-
         while (stack.length > 0) {
             const currCell: DfsStackItem = stack.pop() as DfsStackItem;
             const currRow: number = currCell.row;
@@ -244,8 +238,12 @@ const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, s
             for (const neighbour of maze[currRow][currCol].neighbours) {
                 const neighbourRow: number = neighbour[0];
                 const neighbourCol: number = neighbour[1];
-                visited[neighbourRow][neighbourCol] = true;
-                queue.push(neighbour);
+                if (!visited[neighbourRow][neighbourCol]) {
+                    const neighbourRow: number = neighbour[0];
+                    const neighbourCol: number = neighbour[1];
+                    visited[neighbourRow][neighbourCol] = true;
+                    queue.push(neighbour);
+                }
             }
         }
     }
