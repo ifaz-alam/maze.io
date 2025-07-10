@@ -104,7 +104,10 @@ export const renderMaze = (app: Application<Renderer>) => {
  * @returns A matrix where each cell maintains its own list of valid neighbours
  */
 export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
-    const generateMazeWithDepthFirstSearch = (rootRow: number, rootCol: number) => {
+    const generateMazeWithDepthFirstSearch = (rootCoordinates: Coordinates) => {
+        const rootRow: number = rootCoordinates[0];
+        const rootCol: number = rootCoordinates[1];
+
         const visited: boolean[][] = Array(num_rows)
             .fill(0)
             .map(() => Array(num_cols).fill(false));
@@ -173,7 +176,8 @@ export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
     // Start generation process from a random cell within bounds to introduce more variation.
     const randomRowToBeginGenerationFrom: number = Math.floor(Math.random() * num_rows);
     const randomColToBeginGenerationFrom: number = Math.floor(Math.random() * num_cols);
-    const generatedMaze: GeneratedMaze = generateMazeWithDepthFirstSearch(randomRowToBeginGenerationFrom, randomColToBeginGenerationFrom);
+    const randomCoordinates: Coordinates = [randomRowToBeginGenerationFrom, randomColToBeginGenerationFrom];
+    const generatedMaze: GeneratedMaze = generateMazeWithDepthFirstSearch(randomCoordinates);
 
     return generatedMaze;
 };
@@ -187,7 +191,7 @@ export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
  * 4. Globally furthest points are X and Y.
  * @returns An array of length 2. Contains the row and column value of the furthest point in the maze from the specified `startRow` and `startCol`.
  */
-export const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinates: number[]; endCoordinates: number[] } => {
+export const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinates: Coordinates; endCoordinates: Coordinates } => {
     const num_rows: number = maze.length;
     const num_cols: number = maze[0].length;
     const randomStartRow = Math.floor(Math.random() * num_rows);

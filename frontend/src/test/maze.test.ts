@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
-import { GeneratedMaze, getMaze, getStartAndEndCoordinates, MazeCell } from "../helpers/maze";
-import { areCoordinatesEqual } from "../helpers/maze";
-
+import { getMaze, getStartAndEndCoordinates, areCoordinatesEqual } from "../helpers/maze";
+import { MazeCell, GeneratedMaze, Coordinates } from "../types/maze";
 describe("Simple Generated Maze", () => {
     const numRows: number = 1;
     const numCols: number = 5;
@@ -117,10 +116,10 @@ describe("Maze Generation Helper Functions", () => {
             //    │           │
             // [1,0] ─────── [1,1]
 
-            const topLeft: number[] = [0, 0];
-            const topRight: number[] = [0, 1];
-            const bottomLeft: number[] = [1, 0];
-            const bottomRight: number[] = [1, 1];
+            const topLeft: Coordinates = [0, 0];
+            const topRight: Coordinates = [0, 1];
+            const bottomLeft: Coordinates = [1, 0];
+            const bottomRight: Coordinates = [1, 1];
 
             const maze: MazeCell[][] = [
                 [{ neighbours: [bottomLeft] }, { neighbours: [bottomRight] }],
