@@ -1,21 +1,6 @@
 import { Application, Container, ContainerChild, Graphics, Renderer } from "pixi.js";
 import { shuffleArray } from "../utils/array";
-
-export interface MazeCell {
-    neighbours: number[][];
-}
-interface DfsStackItem {
-    row: number;
-    col: number;
-    isRoot: boolean;
-    rowQueuedFrom?: number;
-    colQueuedFrom?: number;
-}
-export interface GeneratedMaze {
-    maze: MazeCell[][];
-    startCoordinates: number[];
-    endCoordinates: number[];
-}
+import { Coordinates, DfsStackItem, GeneratedMaze, MazeCell } from "../types/maze";
 
 const TILE_SIZE: number = 32;
 const PADDING: number = TILE_SIZE;
@@ -154,8 +139,9 @@ export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
 
             if (!isRoot) {
                 // Update data bidirectionally
-                const rowQueuedFrom: number = currCell?.rowQueuedFrom as number;
-                const colQueuedFrom: number = currCell?.colQueuedFrom as number;
+                const neighbourQueuedFrom: Coordinates = currCell?.neighbourQueuedFrom as Coordinates;
+                const rowQueuedFrom: number = neighbourQueuedFrom[0] as number;
+                const colQueuedFrom: number = neighbourQueuedFrom[1] as number;
                 maze[currRow][currCol].neighbours.push([rowQueuedFrom, colQueuedFrom]);
                 maze[rowQueuedFrom][colQueuedFrom].neighbours.push([currRow, currCol]);
             }
@@ -177,7 +163,7 @@ export const getMaze = (num_rows: number, num_cols: number): GeneratedMaze => {
             for (const neighbour of randomizedNeighbours) {
                 const neighbourRow: number = neighbour[0];
                 const neighbourCol: number = neighbour[1];
-                stack.push({ row: neighbourRow, col: neighbourCol, isRoot: false, rowQueuedFrom: currRow, colQueuedFrom: currCol });
+                stack.push({ row: neighbourRow, col: neighbourCol, isRoot: false, neighbourQueuedFrom: [currRow, currCol] });
             }
         }
 
@@ -207,13 +193,13 @@ export const getStartAndEndCoordinates = (maze: MazeCell[][]): { startCoordinate
     const randomStartRow = Math.floor(Math.random() * num_rows);
     const randomStartCol = Math.floor(Math.random() * num_cols);
 
-    const startCoordinates: number[] = furthestCoordinatesFromPosition(maze, randomStartRow, randomStartCol);
-    const endCoordinates: number[] = furthestCoordinatesFromPosition(maze, startCoordinates[0], startCoordinates[1]);
+    const startCoordinates: Coordinates = furthestCoordinatesFromPosition(maze, randomStartRow, randomStartCol);
+    const endCoordinates: Coordinates = furthestCoordinatesFromPosition(maze, startCoordinates[0], startCoordinates[1]);
 
     return { startCoordinates, endCoordinates };
 };
 
-const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, startCol: number): number[] => {
+const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, startCol: number): Coordinates => {
     const num_rows: number = maze.length;
     const num_cols: number = maze[0].length;
 
@@ -248,7 +234,7 @@ const furthestCoordinatesFromPosition = (maze: MazeCell[][], startRow: number, s
         }
     }
 
-    return furthestCoordinates as number[];
+    return furthestCoordinates as Coordinates;
 };
 
 /**
