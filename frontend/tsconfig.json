@@ -1,0 +1,29 @@
+// TypeScript compiles the original TypeScript code into plain JavaScript, which is what actually runs in the environment.
+// When errors occur or when debugging, the stack traces and breakpoints refer to the compiled JavaScript code, which can sometimes be hard to understand.
+// Source maps provide a mapping between the compiled JavaScript and the original TypeScript source, enabling debuggers to show the original TypeScript code, making debugging easier and clearer.
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "module": "ESNext",
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "skipLibCheck": true,
+
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "moduleDetection": "force",
+        "noEmit": true,
+
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedSideEffectImports": true
+    },
+    "include": ["src"]
+}

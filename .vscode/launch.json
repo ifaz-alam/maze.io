@@ -1,0 +1,16 @@
+// TypeScript transpiles the original TypeScript code into plain JavaScript, which is what actually runs in the environment.
+// When errors occur or when debugging, the stack traces / breakpoints refer to the compiled JavaScript code, which can be hard to understand.
+// Source maps provide a mapping between the compiled JavaScript and the original TypeScript source, enabling debuggers to show the original TypeScript code, making debugging easier and clearer.
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug Frontend",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/frontend/src"
+        }
+    ]
+}
