@@ -5,6 +5,10 @@ import { defineConfig } from "vite";
  */
 // https://vite.dev/config/
 export default defineConfig({
+    // Vite will resolve modules relative to this root (The same place we will have a node_modules folder)
+    // Before there was an error in debug console saying vite was looking at src/node_modules which doesn't even exist.
+    root: "./",
+    base: "/",
     server: {
         port: 3000,
         open: false,

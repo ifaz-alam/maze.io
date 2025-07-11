@@ -8,7 +8,7 @@
 FROM node:22-alpine
 
 # Direct subsequence instructions to operate within this directory
-WORKDIR /app/frontend
+WORKDIR /app
 
 # Setup application files and then place it inside container 
 COPY package*.json ./
