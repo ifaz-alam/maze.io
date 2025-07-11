@@ -8,7 +8,8 @@
         "build": "npm run lint && tsc && vite build",
         "lint": "eslint .",
         "test": "vitest --silent=false",
-        "dev": "vite"
+        "dev": "vite",
+        "dev-exposed": "vite --host"
     },
     "dependencies": {
         "pixi.js": "^8.8.1"
