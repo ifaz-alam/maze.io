@@ -5,14 +5,25 @@
 services:
   frontend:
     build: ./frontend
+    env_file:
+      - ./frontend/.env
     ports:
       # Mapping of host port to container port
-      - '3000:3000'
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     container_name: frontend
-    environment:
-      - CHOKIDAR_USEPOLLING=true
     volumes:
-      - "./frontend/:/app/"
+      - ./frontend/:/app/
+      - /app/node_modules
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    container_name: backend
+    volumes:
+      - ./backend/:/app/
       - /app/node_modules
 
 
