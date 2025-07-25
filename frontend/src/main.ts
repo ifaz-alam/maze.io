@@ -44,9 +44,11 @@ function gameLoop() {
     })();
 }
 
-function onWebsiteOpen() {
+function connectToSocket() {
     console.log("Trying to connect to WS...");
-    const socket = new WebSocket("ws://localhost:3001");
+    const jsonWebToken = localStorage.getItem("jwt");
+    console.log("Hi my token is", jsonWebToken);
+    const socket = new WebSocket(`ws://localhost:3001?jwt=${jsonWebToken}`);
 
     socket.onopen = () => {
         console.log("WebSocket connection opened!");
@@ -59,17 +61,81 @@ function onWebsiteOpen() {
             console.log(data);
 
             if (type == "html") {
-                const element = document.getElementById(data.id) as HTMLElement;
+                const element: HTMLElement = document.getElementById(data.id) as HTMLElement;
                 element.innerText = String(data.value);
             }
         } catch (err) {
             console.error("Failed to parse WebSocket message", err);
         }
+        socket.onerror = (err) => {
+            alert("An error has occured while trying to connect to the server. Please refresh the page and try again.");
+        };
+
+        socket.onclose = () => {};
     };
-
-    socket.onerror = (err) => {};
-
-    socket.onclose = () => {};
 }
 
-onWebsiteOpen();
+async function handleLogin() {
+    // JSON Web Tokens consist of 3 parts separated by a period delimiter: Header, Payload, Signature
+    const jsonWebToken = localStorage.getItem("jwt");
+    if (jsonWebToken) {
+        const payload = JSON.parse(atob(jsonWebToken.split(".")[1]));
+        const username = payload?.user;
+        if (!username) {
+            confirm(`An error has occured. Please refresh the page.`);
+            location.reload();
+        }
+
+        const message = `You’re already logged in as ${username}. Do you want to stay logged in? Click OK to stay or Cancel to log out.`;
+
+        if (confirm(message)) {
+            // User wants to stay logged in — do nothing or proceed normally
+        } else {
+            // User wants to log out
+            localStorage.removeItem("jwt");
+            location.reload();
+        }
+
+        if (confirmLogout) {
+            localStorage.removeItem("jwt");
+            // Optionally: reload page or redirect to login
+            location.reload();
+        }
+    }
+
+    const MAX_USERNAME_LENGTH = 16;
+
+    const userInputElement = document.getElementById("username") as HTMLInputElement;
+    const userInputValue = userInputElement.value.trim().slice(0, MAX_USERNAME_LENGTH);
+
+    if (!userInputValue) alert("Please enter a username");
+
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    const request = new Request("http://localhost:3001/login", {
+        method: "POST",
+        body: JSON.stringify({ username: userInputValue }),
+        headers: headers,
+    });
+
+    try {
+        const response = await fetch(request);
+
+        if (!response.ok) {
+            const errorBody = await response.json();
+            alert(errorBody.error || "Unknown error. Please try again, or refresh the page if this issue persists.");
+        } else {
+            const { accessToken } = await response.json();
+            localStorage.setItem("jwt", accessToken);
+            connectToSocket();
+        }
+    } catch (error) {
+        alert("Network error or server not reachable.");
+    }
+}
+
+(document.getElementById("loginForm") as HTMLElement).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await handleLogin();
+});

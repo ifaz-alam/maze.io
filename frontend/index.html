@@ -28,7 +28,7 @@
     <div class="position-absolute start-50 translate-middle-x text-center" style="top: 180px; z-index: 10;">
         <div class="d-flex gap-5 px-5 py-4 rounded-4" style="background-color: #000; border: 2px solid #00FFAA;">
             <div class="fw-bold fs-4" style="color: #FFFFFF;">
-                <span id="online-count">0</span> <span style="color: #00CFFF;">Online</span>
+                <span id="online-count">0</span> <span style="color: #00CFFF;">In Queue</span>
             </div>
             <div class="fw-bold fs-4" style="color: #FFFFFF;">
                 <span id="ingame-count">0</span> <span style="color: #00FF6E;">In Game</span>
@@ -42,16 +42,15 @@
         <div class="card bg-secondary bg-opacity-25 p-4 rounded-4 shadow" style="width: 100%; max-width: 360px;">
             <h2 class="mb-4 text-center text-white">Enter Your Username</h2>
 
-            <form>
+            <form id="loginForm">
                 <div class="mb-3">
-                    <input type="text" class="form-control" id="username" placeholder="The Legend 27" autocomplete="off"
-                        required />
+                    <input type="text" class="form-control" id="username" maxlength="16" placeholder="TheLegend27"
+                        autocomplete="off" required />
                 </div>
                 <button type="submit" class="btn btn-success w-100">Enter Queue</button>
             </form>
         </div>
     </div>
-
 
     <script type="module" src="/src/main.ts"></script>
 </body>
