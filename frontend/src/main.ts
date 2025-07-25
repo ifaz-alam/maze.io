@@ -95,12 +95,6 @@ async function handleLogin() {
             localStorage.removeItem("jwt");
             location.reload();
         }
-
-        if (confirmLogout) {
-            localStorage.removeItem("jwt");
-            // Optionally: reload page or redirect to login
-            location.reload();
-        }
     }
 
     const MAX_USERNAME_LENGTH = 16;
