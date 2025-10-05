@@ -43,7 +43,7 @@ The next step for maze.io is to introduce a **real-time multiplayer mode** where
 
 ### What is Elo?
 
-Elo is a method for rating player skill based on game outcomes:
+Elo is a method for rating player skill based on game outcomes. It is based on a zero-sum concept, where every point gained by a winning player is taken from the losing player, making it a direct exchange of points:
 
 - If a higher-rated player beats a lower-rated one, their Elo increases slightly.  
 - If a lower-rated player wins against a stronger opponent, they gain more points.  
